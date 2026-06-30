@@ -1,0 +1,81 @@
+{
+  "contentType": "application/vnd.gorules.decision",
+  "nodes": [
+    {
+      "id": "input-1",
+      "type": "inputNode",
+      "name": "Order",
+      "position": { "x": 100, "y": 200 }
+    },
+    {
+      "id": "table-tier",
+      "type": "decisionTableNode",
+      "name": "Customer Tier Discount",
+      "position": { "x": 380, "y": 80 },
+      "content": {
+        "hitPolicy": "first",
+        "inputs": [
+          { "id": "i-tier", "field": "customer.tier", "name": "Customer Tier" }
+        ],
+        "outputs": [
+          { "id": "o-tier-disc", "field": "tierDiscount", "name": "Tier Discount %" }
+        ],
+        "rules": [
+          { "_id": "r1", "i-tier": "\"platinum\"", "o-tier-disc": "0.20" },
+          { "_id": "r2", "i-tier": "\"gold\"",     "o-tier-disc": "0.15" },
+          { "_id": "r3", "i-tier": "\"silver\"",   "o-tier-disc": "0.10" },
+          { "_id": "r4", "i-tier": "\"bronze\"",   "o-tier-disc": "0.05" },
+          { "_id": "r5", "i-tier": "",              "o-tier-disc": "0.00" }
+        ]
+      }
+    },
+    {
+      "id": "table-cart",
+      "type": "decisionTableNode",
+      "name": "Cart Volume Discount",
+      "position": { "x": 380, "y": 340 },
+      "content": {
+        "hitPolicy": "first",
+        "inputs": [
+          { "id": "i-cart", "field": "order.subtotal", "name": "Cart Subtotal" }
+        ],
+        "outputs": [
+          { "id": "o-cart-disc", "field": "cartDiscount", "name": "Volume Discount %" }
+        ],
+        "rules": [
+          { "_id": "r1", "i-cart": ">= 1000", "o-cart-disc": "0.10" },
+          { "_id": "r2", "i-cart": ">= 500",  "o-cart-disc": "0.07" },
+          { "_id": "r3", "i-cart": ">= 200",  "o-cart-disc": "0.05" },
+          { "_id": "r4", "i-cart": ">= 50",   "o-cart-disc": "0.02" },
+          { "_id": "r5", "i-cart": "< 50",    "o-cart-disc": "0.00" }
+        ]
+      }
+    },
+    {
+      "id": "expr-price",
+      "type": "expressionNode",
+      "name": "Final Price",
+      "position": { "x": 700, "y": 200 },
+      "content": {
+        "expressions": [
+          { "id": "e1", "key": "totalDiscountRate", "value": "min(tierDiscount + cartDiscount, 0.30)" },
+          { "id": "e2", "key": "discountAmount",    "value": "order.subtotal * totalDiscountRate" },
+          { "id": "e3", "key": "finalPrice",        "value": "order.subtotal - discountAmount" }
+        ]
+      }
+    },
+    {
+      "id": "output-1",
+      "type": "outputNode",
+      "name": "Pricing",
+      "position": { "x": 980, "y": 200 }
+    }
+  ],
+  "edges": [
+    { "id": "e-in-tier", "type": "edge", "sourceId": "input-1",    "targetId": "table-tier"  },
+    { "id": "e-in-cart", "type": "edge", "sourceId": "input-1",    "targetId": "table-cart"  },
+    { "id": "e-tier-pr", "type": "edge", "sourceId": "table-tier", "targetId": "expr-price"  },
+    { "id": "e-cart-pr", "type": "edge", "sourceId": "table-cart", "targetId": "expr-price"  },
+    { "id": "e-pr-out",  "type": "edge", "sourceId": "expr-price", "targetId": "output-1"    }
+  ]
+}

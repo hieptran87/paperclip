@@ -594,3 +594,56 @@ export const ProjectPicker = createSdkUiComponent<ProjectPickerProps>("ProjectPi
  * Renders Paperclip's native managed routines list for plugin settings pages.
  */
 export const ManagedRoutinesList = createSdkUiComponent<ManagedRoutinesListProps>("ManagedRoutinesList");
+
+// ---------------------------------------------------------------------------
+// GoRulesEditor — JDM visual decision graph editor
+// ---------------------------------------------------------------------------
+
+/**
+ * The graph document format used by GoRules JDM.
+ * A graph is a collection of nodes and directed edges.
+ */
+export interface JdmGraphNode {
+  id: string;
+  type: string;
+  name?: string;
+  position?: { x: number; y: number };
+  [key: string]: unknown;
+}
+
+export interface JdmGraphEdge {
+  id: string;
+  sourceId: string;
+  targetId: string;
+  [key: string]: unknown;
+}
+
+export interface JdmGraph {
+  nodes: JdmGraphNode[];
+  edges: JdmGraphEdge[];
+}
+
+/** Props for `GoRulesEditor`. */
+export interface GoRulesEditorProps {
+  /** The JDM graph value (nodes + edges). Pass `undefined` for uncontrolled. */
+  value?: JdmGraph;
+  /** Called whenever the graph changes (controlled mode). */
+  onChange?: (value: JdmGraph) => void;
+  /** When true, the canvas is rendered read-only. Defaults to false. */
+  disabled?: boolean;
+  /** CSS height for the editor canvas. Defaults to "100%". */
+  height?: string | number;
+  /** Additional className applied to the wrapper element. */
+  className?: string;
+}
+
+/**
+ * Renders the GoRules JDM visual decision graph editor.
+ *
+ * Accepts a controlled `value`/`onChange` pair. Set `disabled` to render
+ * in view-only mode.
+ *
+ * @see https://gorules.io
+ * @see PLUGIN_SPEC.md §19.6 — Shared Components
+ */
+export const GoRulesEditor = createSdkUiComponent<GoRulesEditorProps>("GoRulesEditor");

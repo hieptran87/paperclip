@@ -1,0 +1,93 @@
+{
+  "contentType": "application/vnd.gorules.decision",
+  "nodes": [
+    {
+      "id": "input-1",
+      "type": "inputNode",
+      "name": "Application",
+      "position": { "x": 100, "y": 200 }
+    },
+    {
+      "id": "table-credit",
+      "type": "decisionTableNode",
+      "name": "Credit Score Check",
+      "position": { "x": 380, "y": 80 },
+      "content": {
+        "hitPolicy": "first",
+        "inputs": [
+          { "id": "i-credit", "field": "applicant.creditScore", "name": "Credit Score" }
+        ],
+        "outputs": [
+          { "id": "o-credit", "field": "creditGrade", "name": "Credit Grade" }
+        ],
+        "rules": [
+          { "_id": "r1", "i-credit": ">= 750", "o-credit": "\"excellent\"" },
+          { "_id": "r2", "i-credit": ">= 700", "o-credit": "\"good\"" },
+          { "_id": "r3", "i-credit": ">= 650", "o-credit": "\"fair\"" },
+          { "_id": "r4", "i-credit": ">= 600", "o-credit": "\"poor\"" },
+          { "_id": "r5", "i-credit": "< 600",  "o-credit": "\"bad\"" }
+        ]
+      }
+    },
+    {
+      "id": "table-income",
+      "type": "decisionTableNode",
+      "name": "Income Verification",
+      "position": { "x": 380, "y": 340 },
+      "content": {
+        "hitPolicy": "first",
+        "inputs": [
+          { "id": "i-income", "field": "applicant.annualIncome", "name": "Annual Income" },
+          { "id": "i-debt",   "field": "applicant.existingDebt",  "name": "Existing Debt" }
+        ],
+        "outputs": [
+          { "id": "o-dti",    "field": "debtToIncomeRatio", "name": "DTI Ratio" },
+          { "id": "o-income", "field": "incomeGrade",       "name": "Income Grade" }
+        ],
+        "rules": [
+          { "_id": "r1", "i-income": ">= 80000", "i-debt": "<= 20000", "o-dti": "applicant.existingDebt / applicant.annualIncome", "o-income": "\"strong\"" },
+          { "_id": "r2", "i-income": ">= 50000", "i-debt": "<= 30000", "o-dti": "applicant.existingDebt / applicant.annualIncome", "o-income": "\"moderate\"" },
+          { "_id": "r3", "i-income": "",          "i-debt": "",          "o-dti": "applicant.existingDebt / applicant.annualIncome", "o-income": "\"weak\"" }
+        ]
+      }
+    },
+    {
+      "id": "expr-decision",
+      "type": "expressionNode",
+      "name": "Final Decision",
+      "position": { "x": 680, "y": 200 },
+      "content": {
+        "expressions": [
+          {
+            "id": "e1",
+            "key": "approved",
+            "value": "creditGrade in [\"excellent\", \"good\"] and incomeGrade in [\"strong\", \"moderate\"]"
+          },
+          {
+            "id": "e2",
+            "key": "loanLimit",
+            "value": "creditGrade == \"excellent\" and incomeGrade == \"strong\" ? 500000 : creditGrade == \"good\" ? 250000 : 100000"
+          },
+          {
+            "id": "e3",
+            "key": "interestRate",
+            "value": "creditGrade == \"excellent\" ? 0.035 : creditGrade == \"good\" ? 0.045 : 0.065"
+          }
+        ]
+      }
+    },
+    {
+      "id": "output-1",
+      "type": "outputNode",
+      "name": "Loan Decision",
+      "position": { "x": 960, "y": 200 }
+    }
+  ],
+  "edges": [
+    { "id": "e-in-credit", "type": "edge", "sourceId": "input-1",      "targetId": "table-credit"  },
+    { "id": "e-in-income", "type": "edge", "sourceId": "input-1",      "targetId": "table-income"  },
+    { "id": "e-credit-dec","type": "edge", "sourceId": "table-credit", "targetId": "expr-decision" },
+    { "id": "e-income-dec","type": "edge", "sourceId": "table-income", "targetId": "expr-decision" },
+    { "id": "e-dec-out",   "type": "edge", "sourceId": "expr-decision","targetId": "output-1"      }
+  ]
+}

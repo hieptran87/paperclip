@@ -75,6 +75,7 @@ export {
   AssigneePicker,
   ProjectPicker,
   ManagedRoutinesList,
+  GoRulesEditor,
 } from "./components.js";
 
 export type {
@@ -115,6 +116,10 @@ export type {
   ManagedRoutinesListItem,
   ManagedRoutinesListProject,
   ManagedRoutinesListProps,
+  JdmGraphNode,
+  JdmGraphEdge,
+  JdmGraph,
+  GoRulesEditorProps,
 } from "./components.js";
 
 // Bridge error and host context types

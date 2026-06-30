@@ -1,0 +1,83 @@
+{
+  "contentType": "application/vnd.gorules.decision",
+  "nodes": [
+    {
+      "id": "input-1",
+      "type": "inputNode",
+      "name": "Transaction",
+      "position": { "x": 100, "y": 200 }
+    },
+    {
+      "id": "table-amount",
+      "type": "decisionTableNode",
+      "name": "Order Amount Risk",
+      "position": { "x": 380, "y": 80 },
+      "content": {
+        "hitPolicy": "first",
+        "inputs": [
+          { "id": "i-amount", "field": "order.amount", "name": "Order Amount ($)" }
+        ],
+        "outputs": [
+          { "id": "o-amount-risk", "field": "amountRiskScore", "name": "Amount Risk Score" }
+        ],
+        "rules": [
+          { "_id": "r1", "i-amount": ">= 10000", "o-amount-risk": "4" },
+          { "_id": "r2", "i-amount": ">= 5000",  "o-amount-risk": "3" },
+          { "_id": "r3", "i-amount": ">= 1000",  "o-amount-risk": "2" },
+          { "_id": "r4", "i-amount": ">= 100",   "o-amount-risk": "1" },
+          { "_id": "r5", "i-amount": "< 100",    "o-amount-risk": "0" }
+        ]
+      }
+    },
+    {
+      "id": "table-account",
+      "type": "decisionTableNode",
+      "name": "Account Age Risk",
+      "position": { "x": 380, "y": 340 },
+      "content": {
+        "hitPolicy": "first",
+        "inputs": [
+          { "id": "i-age",     "field": "account.ageDays",        "name": "Account Age (days)" },
+          { "id": "i-history", "field": "account.previousOrders", "name": "Previous Orders" }
+        ],
+        "outputs": [
+          { "id": "o-acct-risk", "field": "accountRiskScore", "name": "Account Risk Score" }
+        ],
+        "rules": [
+          { "_id": "r1", "i-age": ">= 365", "i-history": ">= 10", "o-acct-risk": "0" },
+          { "_id": "r2", "i-age": ">= 90",  "i-history": ">= 3",  "o-acct-risk": "1" },
+          { "_id": "r3", "i-age": ">= 30",  "i-history": ">= 1",  "o-acct-risk": "2" },
+          { "_id": "r4", "i-age": "< 30",   "i-history": "== 0",  "o-acct-risk": "4" },
+          { "_id": "r5", "i-age": "",        "i-history": "",       "o-acct-risk": "3" }
+        ]
+      }
+    },
+    {
+      "id": "expr-risk",
+      "type": "expressionNode",
+      "name": "Risk Decision",
+      "position": { "x": 700, "y": 200 },
+      "content": {
+        "expressions": [
+          { "id": "e1", "key": "totalRiskScore", "value": "amountRiskScore + accountRiskScore" },
+          { "id": "e2", "key": "riskLevel",      "value": "totalRiskScore >= 6 ? \"high\" : totalRiskScore >= 3 ? \"medium\" : \"low\"" },
+          { "id": "e3", "key": "action",         "value": "riskLevel == \"high\" ? \"block\" : riskLevel == \"medium\" ? \"review\" : \"approve\"" },
+          { "id": "e4", "key": "requiresMfa",    "value": "riskLevel != \"low\"" }
+        ]
+      }
+    },
+    {
+      "id": "output-1",
+      "type": "outputNode",
+      "name": "Risk Assessment",
+      "position": { "x": 980, "y": 200 }
+    }
+  ],
+  "edges": [
+    { "id": "e-in-amount",  "type": "edge", "sourceId": "input-1",      "targetId": "table-amount"  },
+    { "id": "e-in-account", "type": "edge", "sourceId": "input-1",      "targetId": "table-account" },
+    { "id": "e-amt-risk",   "type": "edge", "sourceId": "table-amount", "targetId": "expr-risk"     },
+    { "id": "e-acct-risk",  "type": "edge", "sourceId": "table-account","targetId": "expr-risk"     },
+    { "id": "e-risk-out",   "type": "edge", "sourceId": "expr-risk",    "targetId": "output-1"      }
+  ]
+}

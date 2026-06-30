@@ -1,0 +1,85 @@
+{
+  "contentType": "application/vnd.gorules.decision",
+  "nodes": [
+    {
+      "id": "input-1",
+      "type": "inputNode",
+      "name": "Shipment",
+      "position": { "x": 100, "y": 200 }
+    },
+    {
+      "id": "table-zone",
+      "type": "decisionTableNode",
+      "name": "Shipping Zone",
+      "position": { "x": 380, "y": 80 },
+      "content": {
+        "hitPolicy": "first",
+        "inputs": [
+          { "id": "i-dest", "field": "shipment.destinationCountry", "name": "Destination" }
+        ],
+        "outputs": [
+          { "id": "o-zone",     "field": "shippingZone",    "name": "Zone" },
+          { "id": "o-base",     "field": "baseRate",        "name": "Base Rate ($)" },
+          { "id": "o-delivery", "field": "estimatedDays",   "name": "Est. Days" }
+        ],
+        "rules": [
+          { "_id": "r1", "i-dest": "\"US\"",  "o-zone": "\"domestic\"",       "o-base": "5.00",  "o-delivery": "3" },
+          { "_id": "r2", "i-dest": "\"CA\"",  "o-zone": "\"north_america\"",   "o-base": "12.00", "o-delivery": "5" },
+          { "_id": "r3", "i-dest": "\"MX\"",  "o-zone": "\"north_america\"",   "o-base": "15.00", "o-delivery": "7" },
+          { "_id": "r4", "i-dest": "\"GB\"",  "o-zone": "\"europe\"",          "o-base": "22.00", "o-delivery": "10" },
+          { "_id": "r5", "i-dest": "\"DE\"",  "o-zone": "\"europe\"",          "o-base": "22.00", "o-delivery": "10" },
+          { "_id": "r6", "i-dest": "\"AU\"",  "o-zone": "\"asia_pacific\"",    "o-base": "35.00", "o-delivery": "14" },
+          { "_id": "r7", "i-dest": "",         "o-zone": "\"international\"",   "o-base": "45.00", "o-delivery": "21" }
+        ]
+      }
+    },
+    {
+      "id": "table-weight",
+      "type": "decisionTableNode",
+      "name": "Weight Surcharge",
+      "position": { "x": 380, "y": 340 },
+      "content": {
+        "hitPolicy": "first",
+        "inputs": [
+          { "id": "i-weight", "field": "shipment.weightKg", "name": "Weight (kg)" }
+        ],
+        "outputs": [
+          { "id": "o-surcharge", "field": "weightSurcharge", "name": "Weight Surcharge ($)" }
+        ],
+        "rules": [
+          { "_id": "r1", "i-weight": "<= 0.5",  "o-surcharge": "0.00" },
+          { "_id": "r2", "i-weight": "<= 2",     "o-surcharge": "2.00" },
+          { "_id": "r3", "i-weight": "<= 5",     "o-surcharge": "5.00" },
+          { "_id": "r4", "i-weight": "<= 10",    "o-surcharge": "10.00" },
+          { "_id": "r5", "i-weight": "> 10",     "o-surcharge": "shipment.weightKg * 1.50" }
+        ]
+      }
+    },
+    {
+      "id": "expr-shipping",
+      "type": "expressionNode",
+      "name": "Shipping Cost",
+      "position": { "x": 700, "y": 200 },
+      "content": {
+        "expressions": [
+          { "id": "e1", "key": "shippingCost",       "value": "baseRate + weightSurcharge" },
+          { "id": "e2", "key": "freeShippingApplied","value": "shipment.orderValue >= 100 and shippingZone == \"domestic\"" },
+          { "id": "e3", "key": "finalShippingCost",  "value": "freeShippingApplied ? 0 : shippingCost" }
+        ]
+      }
+    },
+    {
+      "id": "output-1",
+      "type": "outputNode",
+      "name": "Shipping",
+      "position": { "x": 980, "y": 200 }
+    }
+  ],
+  "edges": [
+    { "id": "e-in-zone",   "type": "edge", "sourceId": "input-1",      "targetId": "table-zone"    },
+    { "id": "e-in-weight", "type": "edge", "sourceId": "input-1",      "targetId": "table-weight"  },
+    { "id": "e-zone-ship", "type": "edge", "sourceId": "table-zone",   "targetId": "expr-shipping" },
+    { "id": "e-wt-ship",   "type": "edge", "sourceId": "table-weight", "targetId": "expr-shipping" },
+    { "id": "e-ship-out",  "type": "edge", "sourceId": "expr-shipping","targetId": "output-1"      }
+  ]
+}

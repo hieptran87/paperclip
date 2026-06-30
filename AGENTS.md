@@ -220,3 +220,9 @@ PR #2218 (`feat/external-adapter-phase1`) adds external adapter support. See roo
 - `createServerAdapter()` must include ALL optional fields (especially `detectModel`)
 - Built-in UI adapters can shadow external plugin parsers; external override pause/resume should restore the built-in parser.
 - Reference external adapters: Droid (npm); Hermes can also be tested as an override package.
+
+<!-- SPECKIT START -->
+For additional context about technologies to be used, project structure,
+shell commands, and other important information, read the implementation plan at
+[specs/001-gorules-rules-engine/plan.md](file:///Users/hietran5/Documents/bavaan/paperclip/specs/001-gorules-rules-engine/plan.md)
+<!-- SPECKIT END -->

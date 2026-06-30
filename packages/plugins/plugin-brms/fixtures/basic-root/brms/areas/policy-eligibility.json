@@ -1,0 +1,80 @@
+{
+  "contentType": "application/vnd.gorules.decision",
+  "nodes": [
+    {
+      "id": "input-1",
+      "type": "inputNode",
+      "name": "Applicant",
+      "position": { "x": 100, "y": 200 }
+    },
+    {
+      "id": "table-age",
+      "type": "decisionTableNode",
+      "name": "Age Eligibility",
+      "position": { "x": 380, "y": 80 },
+      "content": {
+        "hitPolicy": "first",
+        "inputs": [
+          { "id": "i-age", "field": "applicant.age", "name": "Age" }
+        ],
+        "outputs": [
+          { "id": "o-age-ok", "field": "ageEligible", "name": "Age Eligible" },
+          { "id": "o-age-msg","field": "ageMessage",  "name": "Message" }
+        ],
+        "rules": [
+          { "_id": "r1", "i-age": ">= 18", "o-age-ok": "true",  "o-age-msg": "\"Age requirement met\"" },
+          { "_id": "r2", "i-age": "< 18",  "o-age-ok": "false", "o-age-msg": "\"Must be 18 or older\"" }
+        ]
+      }
+    },
+    {
+      "id": "table-conditions",
+      "type": "decisionTableNode",
+      "name": "Pre-existing Conditions",
+      "position": { "x": 380, "y": 340 },
+      "content": {
+        "hitPolicy": "collect",
+        "inputs": [
+          { "id": "i-cond", "field": "applicant.preExistingCondition", "name": "Pre-existing Condition" }
+        ],
+        "outputs": [
+          { "id": "o-cover",   "field": "coverageAvailable",  "name": "Coverage Available" },
+          { "id": "o-premium", "field": "premiumMultiplier",  "name": "Premium Multiplier" }
+        ],
+        "rules": [
+          { "_id": "r1", "i-cond": "\"none\"",      "o-cover": "true",  "o-premium": "1.0" },
+          { "_id": "r2", "i-cond": "\"diabetes\"",  "o-cover": "true",  "o-premium": "1.4" },
+          { "_id": "r3", "i-cond": "\"hypertension\"","o-cover": "true", "o-premium": "1.3" },
+          { "_id": "r4", "i-cond": "\"cancer\"",    "o-cover": "false", "o-premium": "0"   },
+          { "_id": "r5", "i-cond": "\"hiv\"",       "o-cover": "false", "o-premium": "0"   }
+        ]
+      }
+    },
+    {
+      "id": "expr-eligibility",
+      "type": "expressionNode",
+      "name": "Eligibility Result",
+      "position": { "x": 700, "y": 200 },
+      "content": {
+        "expressions": [
+          { "id": "e1", "key": "eligible",      "value": "ageEligible == true and coverageAvailable == true" },
+          { "id": "e2", "key": "finalPremium",  "value": "eligible ? applicant.basePremium * premiumMultiplier : 0" },
+          { "id": "e3", "key": "reason",        "value": "eligible ? \"Approved\" : ageMessage" }
+        ]
+      }
+    },
+    {
+      "id": "output-1",
+      "type": "outputNode",
+      "name": "Eligibility Result",
+      "position": { "x": 980, "y": 200 }
+    }
+  ],
+  "edges": [
+    { "id": "e-in-age",  "type": "edge", "sourceId": "input-1",          "targetId": "table-age"        },
+    { "id": "e-in-cond", "type": "edge", "sourceId": "input-1",          "targetId": "table-conditions" },
+    { "id": "e-age-eli", "type": "edge", "sourceId": "table-age",        "targetId": "expr-eligibility" },
+    { "id": "e-con-eli", "type": "edge", "sourceId": "table-conditions", "targetId": "expr-eligibility" },
+    { "id": "e-eli-out", "type": "edge", "sourceId": "expr-eligibility", "targetId": "output-1"         }
+  ]
+}
